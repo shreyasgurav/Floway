@@ -29,12 +29,13 @@ Instagram comment automation for Business & Creator accounts. When someone comme
 
 ### 2. Configure Permissions
 
-Request these permissions in your Meta app:
-- `instagram_basic`
-- `instagram_manage_comments`
-- `instagram_manage_messages`
-- `pages_show_list`
-- `pages_read_engagement`
+**CRITICAL:** Instagram permissions are NEVER requested in Facebook Login.
+
+Request ONLY these Facebook Pages permissions:
+- `pages_show_list` - List user's Facebook Pages (required)
+- `pages_read_engagement` - Read Page engagement (required)
+
+Instagram permissions (`instagram_basic`, `instagram_manage_comments`, `instagram_manage_messages`) are granted automatically when accessing Instagram through a connected Page. The Page → Instagram Business Account relationship provides Instagram API access.
 
 ### 3. Set Up Webhooks
 

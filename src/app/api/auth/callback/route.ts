@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 3: Get user's Facebook Pages
+    // This works because we requested 'pages_show_list' in login
     const pages = await getUserPages(longLivedToken);
 
     if (pages.length === 0) {
@@ -67,6 +68,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Step 4: Find Instagram Business/Creator account
+    // CRITICAL: Instagram permissions are NOT requested in login
+    // They are granted implicitly when we access Instagram through the connected Page
+    // The Page → Instagram Business Account relationship provides Instagram API access
     let instagramAccount = null;
     let connectedPage = null;
 

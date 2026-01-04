@@ -43,12 +43,11 @@ WEBHOOK_VERIFY_TOKEN=any_random_string_you_create
 
 **Step 8:** Request permissions:
 - Go to **App Review** → **Permissions and Features**
-- Request these permissions:
-  - `instagram_basic`
-  - `instagram_manage_comments`
-  - `instagram_manage_messages`
-  - `pages_show_list`
-  - `pages_read_engagement`
+- **CRITICAL:** Instagram permissions are NEVER requested in Facebook Login
+- Request ONLY these Facebook Pages permissions:
+  - `pages_show_list` - List user's Facebook Pages (required)
+  - `pages_read_engagement` - Read Page engagement (required)
+- Instagram permissions (`instagram_basic`, `instagram_manage_comments`, etc.) are granted automatically when accessing Instagram through a connected Page
 
 ### 2. NEXT_PUBLIC_APP_URL
 

@@ -56,13 +56,26 @@ export async function GET(request: NextRequest) {
     );
 
     // Step 3: Get user's Facebook Pages
-    // This works because we requested 'pages_show_list' in login
-    const pages = await getUserPages(longLivedToken);
+    // This is the REAL truth endpoint: GET /me/accounts
+    // Tests if pages_show_list permission is working
+    let pages = [];
+    try {
+      pages = await getUserPages(longLivedToken);
+    } catch (e) {
+      console.error('Failed to fetch pages:', e);
+      const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/?error=${encodeURIComponent(
+          `Cannot access Facebook Pages: ${errorMsg}. Check: 1) App roles configured, 2) pages_show_list permission enabled in Use Cases`
+        )}`
+      );
+    }
 
+    // Empty array = User has no Pages or Page not connected to Instagram
     if (pages.length === 0) {
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/?error=${encodeURIComponent(
-          'No Facebook Pages found. Please connect a Page to your Instagram Business account.'
+          'No Facebook Pages found. You need a Facebook Page connected to an Instagram Business/Creator account.'
         )}`
       );
     }

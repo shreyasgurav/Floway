@@ -34,6 +34,13 @@ export async function exchangeForLongLivedToken(
 
 /**
  * Get Facebook Pages the user manages
+ * 
+ * This is the REAL truth endpoint - tests if pages_show_list permission works
+ * 
+ * Outcomes:
+ * ✅ Returns pages → SUCCESS (permission works)
+ * ❌ Permission error → App roles / login issue
+ * ❌ Empty array → User has no Pages or Page not connected to IG
  */
 export async function getUserPages(accessToken: string): Promise<Array<{ id: string; name: string; accessToken: string }>> {
   const url = new URL(`${GRAPH_API_BASE}/me/accounts`);
@@ -44,7 +51,8 @@ export async function getUserPages(accessToken: string): Promise<Array<{ id: str
   const data = await response.json();
 
   if (data.error) {
-    throw new Error(data.error.message);
+    // This tells us if pages_show_list permission is working
+    throw new Error(`Pages API error: ${data.error.message} (Code: ${data.error.code})`);
   }
 
   return data.data || [];

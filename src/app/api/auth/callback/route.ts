@@ -36,24 +36,53 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Validate environment variables
+    if (!process.env.META_APP_ID || !process.env.META_APP_SECRET) {
+      throw new Error('META_APP_ID and META_APP_SECRET must be set in .env.local');
+    }
+
     // Step 1: Exchange code for access token
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`;
     const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token');
-    tokenUrl.searchParams.set('client_id', process.env.META_APP_ID!);
-    tokenUrl.searchParams.set('client_secret', process.env.META_APP_SECRET!);
-    tokenUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`);
+    tokenUrl.searchParams.set('client_id', process.env.META_APP_ID);
+    tokenUrl.searchParams.set('client_secret', process.env.META_APP_SECRET);
+    tokenUrl.searchParams.set('redirect_uri', redirectUri);
     tokenUrl.searchParams.set('code', code);
+
+    console.log('Exchanging code for token...', { 
+      redirectUri, 
+      hasCode: !!code,
+      appId: process.env.META_APP_ID?.substring(0, 10) + '...'
+    });
 
     const tokenResponse = await fetch(tokenUrl.toString());
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
-      throw new Error(tokenData.error.message);
+      console.error('Token exchange error:', tokenData.error);
+      throw new Error(
+        `Token exchange failed: ${tokenData.error.message} (Code: ${tokenData.error.code}). ` +
+        `Check: 1) Redirect URI matches exactly: ${redirectUri}, 2) App credentials are correct`
+      );
     }
+
+    if (!tokenData.access_token) {
+      console.error('No access token in response:', tokenData);
+      throw new Error('No access token received from Meta. Check app credentials and redirect URI.');
+    }
+
+    console.log('Short-lived token received, exchanging for long-lived...');
 
     // Step 2: Exchange for long-lived token (60 days)
     const { accessToken: longLivedToken, expiresIn } = await exchangeForLongLivedToken(
       tokenData.access_token
     );
+
+    if (!longLivedToken) {
+      throw new Error('Failed to get long-lived token');
+    }
+
+    console.log('Long-lived token received, fetching pages...');
 
     // Step 3: Get user's Facebook Pages
     // This is the REAL truth endpoint: GET /me/accounts

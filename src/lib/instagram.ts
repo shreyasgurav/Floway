@@ -13,17 +13,32 @@ const GRAPH_API_BASE = 'https://graph.facebook.com/v18.0';
 export async function exchangeForLongLivedToken(
   shortLivedToken: string
 ): Promise<{ accessToken: string; expiresIn: number }> {
+  if (!shortLivedToken || shortLivedToken.trim().length === 0) {
+    throw new Error('Short-lived token is empty or invalid');
+  }
+
+  if (!process.env.META_APP_ID || !process.env.META_APP_SECRET) {
+    throw new Error('META_APP_ID and META_APP_SECRET must be set');
+  }
+
   const url = new URL(`${GRAPH_API_BASE}/oauth/access_token`);
   url.searchParams.set('grant_type', 'fb_exchange_token');
-  url.searchParams.set('client_id', process.env.META_APP_ID!);
-  url.searchParams.set('client_secret', process.env.META_APP_SECRET!);
+  url.searchParams.set('client_id', process.env.META_APP_ID);
+  url.searchParams.set('client_secret', process.env.META_APP_SECRET);
   url.searchParams.set('fb_exchange_token', shortLivedToken);
 
   const response = await fetch(url.toString());
   const data = await response.json();
 
   if (data.error) {
-    throw new Error(data.error.message);
+    console.error('Long-lived token exchange error:', data.error);
+    throw new Error(
+      `Long-lived token exchange failed: ${data.error.message} (Code: ${data.error.code})`
+    );
+  }
+
+  if (!data.access_token) {
+    throw new Error('No access token in long-lived token response');
   }
 
   return {

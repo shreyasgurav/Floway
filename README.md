@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InstaFlow
 
-## Getting Started
+Instagram comment automation for Business & Creator accounts. When someone comments a keyword on your post, they automatically receive your DM.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Login with Instagram (via Meta OAuth)
+- Select any post or reel from your account
+- Set a trigger keyword (case-insensitive)
+- Configure your DM reply message
+- Automatic DM sending when keyword is detected
+- Reply once per user option
+- Simple status dashboard
+
+## Requirements
+
+- Instagram Business or Creator account (not personal/private)
+- Facebook Page connected to your Instagram account
+- Meta Developer App with required permissions
+
+## Setup
+
+### 1. Create Meta Developer App
+
+1. Go to [developers.facebook.com](https://developers.facebook.com)
+2. Create a new app → Select "Business" type
+3. Add products: Facebook Login, Instagram Graph API
+4. Configure OAuth redirect URL: `https://yourdomain.com/api/auth/callback`
+
+### 2. Configure Permissions
+
+Request these permissions in your Meta app:
+- `instagram_basic`
+- `instagram_manage_comments`
+- `instagram_manage_messages`
+- `pages_show_list`
+- `pages_read_engagement`
+
+### 3. Set Up Webhooks
+
+1. In Meta Developer Console, go to Webhooks
+2. Subscribe to "Instagram" product
+3. Select "comments" field
+4. Set callback URL: `https://yourdomain.com/api/webhook/instagram`
+5. Set verify token (same as `WEBHOOK_VERIFY_TOKEN` env var)
+
+### 4. Environment Variables
+
+Create `.env.local` with:
+
+```env
+# Meta App Credentials
+META_APP_ID=your_app_id
+META_APP_SECRET=your_app_secret
+
+# App URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Webhook Verification Token (create any random string)
+WEBHOOK_VERIFY_TOKEN=your_random_token
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 5. Run the App
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+## Production Deployment
 
-To learn more about Next.js, take a look at the following resources:
+For production (e.g., Vercel):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Set all environment variables in your hosting platform
+2. Update `NEXT_PUBLIC_APP_URL` to your production domain
+3. Update OAuth redirect URL in Meta Developer Console
+4. Webhooks require HTTPS - set up the webhook URL after deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Routes
 
-## Deploy on Vercel
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/auth/login` | GET | Initiates Meta OAuth flow |
+| `/api/auth/callback` | GET | OAuth callback handler |
+| `/api/auth/logout` | GET/POST | Clears session |
+| `/api/media` | GET | Fetches user's Instagram posts |
+| `/api/automations` | GET/POST | List/create automations |
+| `/api/automations/[id]` | PATCH/DELETE | Update/delete automation |
+| `/api/webhook/instagram` | GET/POST | Instagram webhook endpoint |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS
+- Instagram Graph API
+- Meta OAuth
+
+## Notes
+
+- Personal/private Instagram accounts are not supported by the Instagram Graph API
+- Webhooks require a publicly accessible HTTPS URL
+- For development, use ngrok or similar to tunnel webhooks
+- The in-memory database resets on server restart (use Firestore for production)
+
+## Webhook Testing (Development)
+
+1. Install ngrok: `brew install ngrok` or download from ngrok.com
+2. Start your dev server: `npm run dev`
+3. Start ngrok: `ngrok http 3000`
+4. Use the ngrok HTTPS URL for webhook configuration in Meta Developer Console
